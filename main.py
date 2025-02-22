@@ -19,7 +19,7 @@ class Player(GameSprite):
         keys = key.get_pressed()
         if keys[K_LEFT] and self.rect.x > 5:
             self.rect.x -= self.speed
-        if keys[K_RIGHT] and self.rect.x < win_height - 80:
+        if keys[K_RIGHT] and self.rect.x < win_width - 80:
             self.rect.x += self.speed
         if keys[K_UP] and self.rect.y > 5:
             self.rect.y -= self.speed
@@ -42,6 +42,25 @@ class Enemy(GameSprite):
         else:
             self.rect.x += self.speed
 
+class Wall(sprite.Sprite):
+    def __init__(self, color_1, color_2, color_3, wall_x, wall_y, wall_widht, wall_heigit):
+        super().__init__()
+        self.color_1 = color_1
+        self.color_2 = color_2
+        self.color_3 = color_3
+        self.widht = wall_widht
+        self.heigit = wall_heigit
+
+        self.image = Surface((self.widht, self.heigit))
+        self.image.fill((color_1, color_2, color_3))
+
+        self.rect = self.image.get_rect()
+        self.rect.x = wall_x
+        self.rect.y = wall_y
+
+    def draw_wall(self):
+        window.blit(self.image, (self.rect.x, self.rect.y))
+
 
 # Ігрова сцена:
 win_width = 700
@@ -57,6 +76,15 @@ player = Player('hero.png', 5, win_height - 80, 4)
 monster = Enemy('cyborg.png', win_width - 80, 280, 2)
 final = GameSprite('treasure.png', win_width - 120, win_height - 80, 0)
 
+
+w1 = Wall(154, 205, 50, 100, 20, 450, 10)
+w2 = Wall(154, 205, 50, 100, 480, 350, 10)
+w3 = Wall(154, 205, 50, 100, 20, 10, 380)
+
+font.init()
+font = font.Font(None, 70)
+win = font.render('Молодец', True, (255, 215, 0))
+lose = font.render('Ти не профи', True, (180, 0, 0))
 game = True
 clock = time.Clock()
 FPS = 60
@@ -69,6 +97,8 @@ mixer.init()
 mixer.music.load('jungles.ogg')
 mixer.music.play()
 
+money = mixer.Sound('money.ogg')
+kick = mixer.Sound('kick.ogg')
 while game:
     for e in event.get():
         if e.type == QUIT:
@@ -81,6 +111,24 @@ while game:
 
         player.reset()
         monster.reset()
+        final.reset()
+
+        w1.draw_wall()
+        w2.draw_wall()
+        w3.draw_wall()
+
+    if (sprite.collide_rect(player, monster) or sprite.collide_rect(player, w1) or sprite.collide_rect(player, w2) or sprite.collide_rect(player, w3)):
+        window.blit(lose, (200, 200))
+        if not finish:
+            kick.play()
+            finish = True
+
+    if sprite.collide_rect(player, final):
+        window.blit(win, (200, 200))
+        if not finish:
+            money.play()
+            finish = True
+
 
     display.update()
     clock.tick(FPS)
